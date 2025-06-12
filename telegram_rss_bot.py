@@ -1,46 +1,64 @@
 import logging
+import asyncio
 import feedparser
-from telegram import Bot
-from telegram.ext import Updater, CommandHandler, CallbackContext
-from telegram import Update
+from telegram import Update, BotCommand
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-TELEGRAM_BOT_TOKEN = 'BOT_TOKEN_HERE'
-RSS_FEED_URL = 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'
-CHAT_ID = 'YOUR_CHAT_ID_HERE'  
-
-sent_links = set()
+BOT_TOKEN = "YOUR_BOT_TOKEN"
+RSS_FEED_URL = "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"  # Or use any other like https://news.google.com/rss
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def fetch_rss():
+def fetch_latest_news(limit=5):
     feed = feedparser.parse(RSS_FEED_URL)
-    news_items = []
-
-    for entry in feed.entries:
-        if entry.link not in sent_links:
-            news_items.append(f"📰 <b>{entry.title}</b>\n{entry.link}")
-            sent_links.add(entry.link)
+    if not feed.entries:
+        return ["No news found."]
     
+    news_items = []
+    for entry in feed.entries[:limit]:
+        title = entry.title
+        link = entry.link
+        news_items.append(f"📰 {title}\n🔗 {link}")
     return news_items
 
-def send_news(update: Update, context: CallbackContext):
-    news_items = fetch_rss()
-    if not news_items:
-        update.message.reply_text("No new news right now.")
-        return
+async def send_news(context: ContextTypes.DEFAULT_TYPE):
+    chat_id = context.job.chat_id
+    news_items = fetch_latest_news()
     for news in news_items:
-        context.bot.send_message(chat_id=update.effective_chat.id, text=news, parse_mode='HTML')
+        await context.bot.send_message(chat_id=chat_id, text=news)
+
+async def news(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    news_items = fetch_latest_news()
+    for news in news_items:
+        await update.message.reply_text(news)
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Welcome! Use /news to get the latest news.")
+
+async def setup_commands(app):
+    commands = [
+        BotCommand("start", "Start the bot"),
+        BotCommand("news", "Get latest news"),
+    ]
+    await app.bot.set_my_commands(commands)
 
 def main():
-    updater = Updater(token=TELEGRAM_BOT_TOKEN, use_context=True)
-    dp = updater.dispatcher
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    dp.add_handler(CommandHandler('news', send_news))
+    # Add command handlers
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("news", news))
 
-    updater.start_polling()
-    updater.idle()
+    # Set Telegram command list
+    app.job_queue.run_once(lambda ctx: asyncio.create_task(setup_commands(app)), when=1)
 
-if __name__ == '__main__':
+    # Schedule hourly news
+    app.job_queue.run_repeating(send_news, interval=60, first=10)
+
+    logger.info("Bot is running... Press Ctrl+C to stop.")
+    app.run_polling()
+
+if __name__ == "__main__":
     main()
+# Ensure to replace YOUR_BOT_TOKEN_HERE with your actual Telegram bot token.
