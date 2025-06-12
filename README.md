@@ -14,8 +14,41 @@ This Telegram bot fetches and sends news updates from an RSS feed to users or gr
 
 ## 🚀 Setup Instructions
 
-### 1. Clone the Repository
+### 1. Make A Bot
+🤖 Create and Configure Your Bot on BotFather
+
+    Open Telegram and search for @BotFather
+
+    Run /start
+
+    Use /newbot to create a new bot
+
+    Choose a name and username for your bot
+
+    Copy the Bot Token (e.g., 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11)
+
+    Paste this token into your code:
+
+    ```bash
+    BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+
+
+### 2. Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/telegram-news-bot.git
 cd telegram-news-bot
+```
+### 3. Install Requirements
+
+```bash
+pip install -r requirements.txt
+```
+### 4. Run The Script
+
+```bash
+python telegram_rss_bot.py
+```
+
+
+
