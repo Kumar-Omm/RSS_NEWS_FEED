@@ -54,7 +54,7 @@ def main():
     app.job_queue.run_once(lambda ctx: asyncio.create_task(setup_commands(app)), when=1)
 
     # Schedule hourly news
-    app.job_queue.run_repeating(send_news, interval=60, first=10)
+    app.job_queue.run_repeating(send_news, interval=3600, first=10)
 
     logger.info("Bot is running... Press Ctrl+C to stop.")
     app.run_polling()
