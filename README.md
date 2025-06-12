@@ -50,6 +50,11 @@ pip install -r requirements.txt
 ```bash
 python telegram_rss_bot.py
 ```
+### 5. Screenshot
+It should run like this in the Telegram
+
+![Logo](TG_BOT.jpg)
+
 
 
 
